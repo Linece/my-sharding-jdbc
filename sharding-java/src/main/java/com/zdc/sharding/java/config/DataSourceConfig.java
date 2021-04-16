@@ -2,9 +2,11 @@ package com.zdc.sharding.java.config;
 
 import io.shardingjdbc.core.api.config.ShardingRuleConfiguration;
 import io.shardingjdbc.core.api.config.TableRuleConfiguration;
+import io.shardingjdbc.core.api.config.strategy.InlineShardingStrategyConfiguration;
 import io.shardingjdbc.core.api.config.strategy.StandardShardingStrategyConfiguration;
 import io.shardingjdbc.core.jdbc.core.datasource.ShardingDataSource;
 import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.context.annotation.Bean;
@@ -25,11 +27,15 @@ public class DataSourceConfig {
 	@Primary
 	public DataSource dataSource1() throws SQLException {
 		ShardingRuleConfiguration configuration =new ShardingRuleConfiguration();
-		//默认的分库策略
+
+		//默认的分库策略（user_id  分片字段）
 		configuration.setDefaultDatabaseShardingStrategyConfig(new StandardShardingStrategyConfiguration("user_id",DBShardAlgo.class.getName() ));
-		//默认分表策略
+////		//默认分表策略
 		configuration.setDefaultTableShardingStrategyConfig(new StandardShardingStrategyConfiguration("user_id",TblPreShardAlgo.class.getName() ,TblRangeShardAlgo.class.getName()));
-		// 为user_info表设置分库分表策略、算法
+		//configuration.setDefaultDatabaseShardingStrategyConfig(new InlineShardingStrategyConfiguration("user_id","test${user_id % 2}" ));
+//		//默认分表策略
+		//configuration.setDefaultTableShardingStrategyConfig(new InlineShardingStrategyConfiguration("user_id","user_info"));
+//		// 为user_info表设置分库分表策略、算法
 		configuration.getTableRuleConfigs().add(getUserTableRuleConfiguration());
 		return new ShardingDataSource(configuration.build(createDataSourceMap()));
 
@@ -61,9 +67,21 @@ public class DataSourceConfig {
 	public TableRuleConfiguration getUserTableRuleConfiguration() {
 		TableRuleConfiguration userTableRuleConfig=new TableRuleConfiguration();
 		userTableRuleConfig.setLogicTable("user_info");
-		userTableRuleConfig.setActualDataNodes("test0.user_info, test1.user_info");
-		userTableRuleConfig.setDatabaseShardingStrategyConfig(new StandardShardingStrategyConfiguration("user_id", DBShardAlgo.class.getName()));
-		userTableRuleConfig.setTableShardingStrategyConfig(new StandardShardingStrategyConfiguration("user_id",TblPreShardAlgo.class.getName(), TblRangeShardAlgo.class.getName()));
+		userTableRuleConfig.setActualDataNodes("test${0..1}.user_info");
+//		userTableRuleConfig.setActualDataNodes("test0.user_info, test1.user_info");
+//		userTableRuleConfig.setDatabaseShardingStrategyConfig(new StandardShardingStrategyConfiguration("user_id", DBShardAlgo.class.getName()));
+//		userTableRuleConfig.setTableShardingStrategyConfig(new StandardShardingStrategyConfiguration("user_id",TblPreShardAlgo.class.getName(), TblRangeShardAlgo.class.getName()));
+		//userTableRuleConfig.setDatabaseShardingStrategyConfig(new InlineShardingStrategyConfiguration("user_id", "test${user_id % 2}"));
+		//userTableRuleConfig.setTableShardingStrategyConfig(new InlineShardingStrategyConfiguration("user_id","user_info"));
 		return userTableRuleConfig;
 	}
+
+
+
+//	@Bean
+//	public SqlSessionFactory sqlSessionFactory(DataSource dataSource){
+//		SqlSessionFactoryBean sqlSessionFactoryBean = new SqlSessionFactoryBean();
+//		sqlSessionFactoryBean.setDataSource(dataSource);
+//		return (SqlSessionFactory) sqlSessionFactoryBean;
+//	}
 }

@@ -11,7 +11,7 @@ import java.util.List;
 @Service
 public class UserService {
 
-    @Autowired
+    @Resource
     public UserInfoMapper userInfoMapper;
 
     public static Long userId = 1L;
@@ -35,4 +35,10 @@ public class UserService {
     public List<UserInfo> selectByRange(Long firstId, Long lastId){
         return userInfoMapper.selectByRange(firstId, lastId);
     }
+
+    public UserInfo selectByid(Long userId){
+        return userInfoMapper.selectByPrimaryKey(userId);
+    }
+
+
 }
